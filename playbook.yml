@@ -127,7 +127,7 @@
       blockinfile:
         path: /etc/httpd/sites-available/{{ nombre_virtual_host }}.conf
         block: |
-          <VirtualHost *: {{ puerto_virtual_host }}>
+          <VirtualHost *:{{ puerto_virtual_host }}>
             ServerName www.{{ nombre_virtual_host }}
             ServerAlias {{ nombre_virtual_host }}
             DocumentRoot /var/www/{{ nombre_virtual_host }}/html
