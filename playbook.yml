@@ -43,7 +43,6 @@
     - name: "Creacion del usuario propietario"
       user:
         name: "{{ usuario_propietario }}"
-        home: /home/{{ usuario_propietario }}
         state: present
     
     - name: "Creacion del directorio para el Host Virtual"
