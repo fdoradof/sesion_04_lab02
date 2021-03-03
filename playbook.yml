@@ -1,6 +1,9 @@
 ---
 - name: "Instalacion y configuracion de serivdor Web"
   hosts: 192.168.0.14
+  vars_files:
+    vars/default.yml
+  
   tasks:
     - name: "Descripcion del ejercicio"
       debug:
@@ -37,20 +40,26 @@
       selinux:
         state: disabled
     
+    - name: "Creacion del usuario propietario"
+      user:
+        name: "{{ usuario_propietario }}"
+        home: /home/{{ usuario_propietario }}
+        state: present
+    
     - name: "Creacion del directorio para el Host Virtual"
       file:
-        path: /var/www/example.com/html
-        owner: root
-        group: root
+        path: "/var/www/{{ nombre_virtual_host }}/html"
+        owner: "{{ usuario_propietario }}"
+        group: "{{ grupo_propietario }}"
         mode: 0765
         recurse: yes
         state: directory
 
     - name: "Creacion del directorio de logs para el Host Virtual"
       file:                             
-        path: /var/www/example.com/log                                                                                                                                                                        
-        owner: root                     
-        group: root                     
+        path: /var/www/{{ nombre_virtual_host }}/log                                                                                                                                                                        
+        owner: "{{ usuario_propietario }}"                     
+        group: "{{ grupo_propietario }}"                     
         mode: 0765                      
         recurse: yes                    
         state: directory
@@ -64,22 +73,22 @@
 
     - name: "Creacion del index.html"
       file:
-        path: /var/www/example.com/html/index.html
+        path: /var/www/{{ nombre_virtual_host }}/html/index.html
         mode: 0755
-        owner: root
-        group: root
+        owner: "{{ usuario_propietario }}"
+        group: "{{ grupo_propietario }}"
         state: touch
     
     - name: "Insercion de contenido en el index.html"
       blockinfile:
-        path: /var/www/example.com/html/index.html 
+        path: /var/www/{{ nombre_virtual_host }}/html/index.html 
         block: |
           <html>
           <head>
-          <title>Welcome to Example.com!</title>
+          <title>Welcome to {{ nombre_virtual_host }}!</title>
           </head>
           <body>
-          <h1>Success! The example.com virtual host is working!</h1>
+          <h1>Success! The {{ nombre_virtual_host }} virtual host is working!</h1>
           </body>
           </html>
     
@@ -109,7 +118,7 @@
     
     - name: "Crear el fichero de configuracion para el Host Virtual"
       file:
-        path: /etc/httpd/sites-available/example.com.conf
+        path: /etc/httpd/sites-available/{{ nombre_virtual_host }}.conf
         owner: root
         group: root
         mode: 0755
@@ -117,20 +126,20 @@
     
     - name: "Insercion de contenido en el index.html"
       blockinfile:
-        path: /etc/httpd/sites-available/example.com.conf
+        path: /etc/httpd/sites-available/{{ nombre_virtual_host }}.conf
         block: |
-          <VirtualHost *:80>
-            ServerName www.example.com
-            ServerAlias example.com
-            DocumentRoot /var/www/example.com/html
-            ErrorLog /var/www/example.com/log/error.log
-            CustomLog /var/www/example.com/log/requests.log combined
+          <VirtualHost *: {{ puerto_virtual_host }}>
+            ServerName www.{{ nombre_virtual_host }}
+            ServerAlias {{ nombre_virtual_host }}
+            DocumentRoot /var/www/{{ nombre_virtual_host }}/html
+            ErrorLog /var/www/{{ nombre_virtual_host }}/log/error.log
+            CustomLog /var/www/{{ nombre_virtual_host }}/log/requests.log combined
           </VirtualHost>
     
     - name: Create a symbolic link
       file:
-        src: /etc/httpd/sites-available/example.com.conf
-        dest: /etc/httpd/sites-enabled/example.com.conf
+        src: /etc/httpd/sites-available/{{ nombre_virtual_host }}.conf
+        dest: /etc/httpd/sites-enabled/{{ nombre_virtual_host }}.conf
         owner: root
         group: root
         force: yes

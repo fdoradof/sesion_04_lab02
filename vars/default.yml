@@ -1,0 +1,4 @@
+nombre_virtual_host: example.com
+usuario_propietario: root
+grupo_propietario: root
+puerto_virtual_host: 80
