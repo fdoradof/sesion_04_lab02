@@ -1,0 +1,4 @@
+nombre_virtual_host: gallinaturuleca.com
+usuario_propietario: gallina
+grupo_propietario: gallina
+puerto_virtual_host: 81
