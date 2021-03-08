@@ -1,149 +1,73 @@
 ---
-- name: "Instalacion y configuracion de serivdor Web"
-  hosts: 192.168.0.14
+- name: "Laboratorio de variables"
+  hosts: nodos
+  vars:
+    paquetes:
+      - openssh-server
+      - firewalld
+      - httpd
+      - mariadb-server
+
+    grupos:
+      - ctic
+      - devops
+      - everis
+   
   vars_files:
     vars/default.yml
-  
+
   tasks:
-    - name: "Descripcion del ejercicio"
-      debug:
-        msg: >
-          En este ejericicio practicaremos el desarrollo de un playbook desde 0
-          para ello, realizaremos varias tareas para levantar un servidor apache
-
-    - name: "Instalacion de httpd"
-      yum:
-        name: [httpd, httpd-tools]
-        state: latest
-    
-    - name: "Habilitar el firewalld servicio http"
-      firewalld:
-        service: http
-        permanent: yes
-        immediate: yes
-        state: enabled
-        
-    - name: "Habilitar el firewalld servicio https"
-      firewalld:                                                                                                                                                                                               
-        service: https
-        permanent: yes
-        immediate: yes
-        state: enabled
-    
-    - name: "Iniciamos el servicio httpd (tambien con el arranque del servidor)"
-      service:
-        name: httpd
-        enabled: yes
-        state: restarted
-    
-    - name: "Deshabilitar el selinux"
-      selinux:
-        state: disabled
-    
-    - name: "Creacion del usuario propietario"
-      user:
-        name: "{{ usuario_propietario }}"
+    - name: "Creacion de grupos"
+      group:
+        name: "{{ item }}"
         state: present
-    
-    - name: "Creacion del directorio para el Host Virtual"
-      file:
-        path: "/var/www/{{ nombre_virtual_host }}/html"
-        owner: "{{ usuario_propietario }}"
-        group: "{{ grupo_propietario }}"
-        mode: 0765
-        recurse: yes
-        state: directory
+      loop: "{{ grupos }}"
 
-    - name: "Creacion del directorio de logs para el Host Virtual"
-      file:                             
-        path: /var/www/{{ nombre_virtual_host }}/log                                                                                                                                                                        
-        owner: "{{ usuario_propietario }}"                     
-        group: "{{ grupo_propietario }}"                     
-        mode: 0765                      
-        recurse: yes                    
-        state: directory
+    - name: "Instalacion de servicios"
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ paquetes }}"
+     
+    - name: "Arrancar los servicios"
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop: "{{ servicios }}"
 
-    - name: "Modificar permisos del directorio"
-      file:
-        path: /var/www
-        mode: 0755
-        recurse: yes
-        state: directory
+    - name: "Creacion de usuario administrador"
+      user:
+        name: administrador
+        groups: "{{ usuarios['administrador']['grupo'] }}"
+        generate_ssh_key: "{{ usuarios['administrador']['generar_key'] }}"
+        ssh_key_bits: 2048
+        ssh_key_file: "{{ usuarios['administrador']['ruta_key'] }}"
+        expires: "{{ usuarios['administrador']['expira'] }}"
 
-    - name: "Creacion del index.html"
-      file:
-        path: /var/www/{{ nombre_virtual_host }}/html/index.html
-        mode: 0755
-        owner: "{{ usuario_propietario }}"
-        group: "{{ grupo_propietario }}"
-        state: touch
-    
-    - name: "Insercion de contenido en el index.html"
-      blockinfile:
-        path: /var/www/{{ nombre_virtual_host }}/html/index.html 
-        block: |
-          <html>
-          <head>
-          <title>Welcome to {{ nombre_virtual_host }}!</title>
-          </head>
-          <body>
-          <h1>Success! The {{ nombre_virtual_host }} virtual host is working!</h1>
-          </body>
-          </html>
-    
-    - name: "Creacion del directorio sites-available"
-      file:
-        path: /etc/httpd/sites-available
-        owner: root
-        group: root
-        mode: 0765
-        recurse: yes
-        state: directory
+    - name: "Creacion del usuario everis_prueba"
+      user:
+        name: everis_prueba
+        groups: "{{ usuarios['everis_prueba']['grupo'] }}"
+        generate_ssh_key: "{{ usuarios['everis_prueba']['generar_key'] }}"
+        uid: "{{ usuarios['everis_prueba']['identificador'] }}"
+        expires: "{{ usuarios['everis_prueba']['expira'] }}"
 
-    - name: "Creacion del directorio sites-available"
-      file:                                                                                                                                                                                                    
-        path: /etc/httpd/sites-enabled
-        owner: root                                 
-        group: root                                 
-        mode: 0765                                  
-        recurse: yes                                
-        state: directory 
-    
-    - name: "Insertar linea de configuracion"
-      lineinfile:
-        path: /etc/httpd/conf/httpd.conf
-        line: "IncludeOptional sites-enabled/*.conf"
-        create: yes
-    
-    - name: "Crear el fichero de configuracion para el Host Virtual"
-      file:
-        path: /etc/httpd/sites-available/{{ nombre_virtual_host }}.conf
-        owner: root
-        group: root
-        mode: 0755
-        state: touch
-    
-    - name: "Insercion de contenido en el index.html"
-      blockinfile:
-        path: /etc/httpd/sites-available/{{ nombre_virtual_host }}.conf
-        block: |
-          <VirtualHost *:{{ puerto_virtual_host }}>
-            ServerName www.{{ nombre_virtual_host }}
-            ServerAlias {{ nombre_virtual_host }}
-            DocumentRoot /var/www/{{ nombre_virtual_host }}/html
-            ErrorLog /var/www/{{ nombre_virtual_host }}/log/error.log
-            CustomLog /var/www/{{ nombre_virtual_host }}/log/requests.log combined
-          </VirtualHost>
-    
-    - name: Create a symbolic link
-      file:
-        src: /etc/httpd/sites-available/{{ nombre_virtual_host }}.conf
-        dest: /etc/httpd/sites-enabled/{{ nombre_virtual_host }}.conf
-        owner: root
-        group: root
-        force: yes
-        state: link
-    
-    - name: "Reinicio del server"
+    - name: "Creacion usuario fdoradof"
+      user:
+        name: fdoradof            
+        groups: "{{ usuarios['fdoradof']['grupo'] }}"   
+        generate_ssh_key: "{{ usuarios['fdoradof']['generar_key'] }}"
+        ssh_key_bits: 2048
+        ssh_key_file: "{{ usuarios['fdoradof']['ruta_key'] }}"        
+        expires: "{{ usuarios['fdoradof']['expira'] }}"
+
+    - name: "Reiniciar los servicios"
+      service:
+        name: "{{ item }}"
+        state: restarted
+      loop: "{{ servicios }}"
+
+    - name: "Reinicio de nodos"
       reboot:
-...
+

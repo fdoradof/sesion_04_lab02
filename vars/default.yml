@@ -1,4 +1,22 @@
-nombre_virtual_host: example.com
-usuario_propietario: root
-grupo_propietario: root
-puerto_virtual_host: 80
+servicios:
+  - sshd
+  - firewalld
+  - httpd
+  - mariadb
+
+usuarios:
+  administrador:
+    grupo: root
+    generar_key: yes
+    ruta_key: ".ssh/id_rsa"
+    expira: -1
+  everis_prueba:
+    grupo: everis
+    generar_key: no
+    identificador: 1212
+    expira: 12407987
+  fdoradof:
+    grupo: ctic, devops
+    generar_key: yes
+    ruta_key: ".ssh/id_rsa"
+    expira: 122403387
