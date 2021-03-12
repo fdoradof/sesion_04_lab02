@@ -14,7 +14,7 @@ Laboratorio de variables
 		  - sshd
 		  - firewalld
 		  - httpd
-		  - mariadb-server
+		  - mariadb
 
 		usuarios:
 		  administrador:
@@ -28,7 +28,7 @@ Laboratorio de variables
 			uid: 1212
 			expira: 12407987
 		  nuestro:
-		    	grupo: ctic, devops
+		    grupo: ctic, devops
 			generar_key: yes
 			ruta_key: .ssh/id_rsa
 			expira: 122403387		
